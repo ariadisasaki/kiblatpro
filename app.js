@@ -371,10 +371,13 @@ window.addEventListener("deviceorientation", e=>{
   currentHeading = 360 - e.alpha;
   smoothHeading += (currentHeading - smoothHeading)*0.1;
 
-  document.getElementById("needle").style.transform =
-    `translate(-50%, -100%) rotate(${smoothHeading}deg)`;
-  document.getElementById("qiblatLine").style.transform =
-    `translate(-50%, -100%) rotate(${azimuthKiblat}deg)`;
+  // Putar piringan berlawanan arah hadap HP
+document.getElementById("compassDisk").style.transform =
+  `rotate(${-smoothHeading}deg)`;
+
+// Garis kiblat relatif terhadap arah HP
+document.getElementById("qiblatLine").style.transform =
+  `translate(-50%, -100%) rotate(${azimuthKiblat - smoothHeading}deg)`;
 
   const selisih = ((azimuthKiblat - smoothHeading + 540)%360)-180;
   document.getElementById("selisihSudut").innerText=
