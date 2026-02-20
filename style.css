@@ -177,6 +177,45 @@ header{
   transition:transform 0.1s linear;
 }
 
+/* ===== TICKS KOMPAS ===== */
+.ticks{
+  position:absolute;
+  width:100%;
+  height:100%;
+  top:0;
+  left:0;
+  pointer-events:none;
+}
+
+.tick{
+  position:absolute;
+  top:0;
+  left:50%;
+  width:2px;
+  background:#111;
+  transform-origin:50% 130px; /* radius 260px / 2 */
+}
+
+/* variasi panjang */
+.tick.small{
+  height:6px;
+  opacity:0.4;
+}
+
+.tick.medium{
+  height:10px;
+  opacity:0.7;
+}
+
+.tick.large{
+  height:16px;
+}
+
+.tick.north{
+  height:22px;
+  background:red;
+}
+
 /* Jarum tetap ke atas */
 .needle{
   position:absolute;
