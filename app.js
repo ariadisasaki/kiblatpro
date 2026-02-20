@@ -292,21 +292,51 @@ function haversine(lat1,lon1,lat2,lon2){
 /* ===============================
    KOMPAS & ARAH MATA ANGIN
 ================================= */
+
+// Label arah lengkap untuk teks bawah koordinat
 const arahMataAnginLabel = ["Utara","Timur Laut","Timur","Tenggara","Selatan","Barat Daya","Barat","Barat Laut"];
+
+// Label singkat untuk piringan kompas
+const arahMataAnginSingkat = ["N","NE","E","SE","S","SW","W","NW"];
+
+// Buat label piringan kompas
+const directionLabelsContainer = document.getElementById("directionLabels");
+function buatLabelPiringan() {
+  arahMataAnginSingkat.forEach((label, index) => {
+    const div = document.createElement("div");
+    div.className = "direction-label";
+    div.innerText = label;
+
+    const angle = (index * 360 / arahMataAnginSingkat.length) * Math.PI / 180;
+    const x = 50 + Math.sin(angle) * 50;
+    const y = 50 - Math.cos(angle) * 50;
+    div.style.left = `${x}%`;
+    div.style.top = `${y}%`;
+
+    directionLabelsContainer.appendChild(div);
+  });
+}
+buatLabelPiringan();
+
+// Event device orientation
 window.addEventListener("deviceorientation", e=>{
   if(e.alpha===null) return;
   currentHeading = 360 - e.alpha;
   smoothHeading += (currentHeading - smoothHeading)*0.1;
 
-  document.getElementById("needle").style.transform=`translate(-50%,-100%) rotate(${smoothHeading}deg)`;
-  document.getElementById("qiblatLine").style.transform=`translate(-50%,-100%) rotate(${azimuthKiblat}deg)`;
+  document.getElementById("needle").style.transform =
+    `translate(-50%, -100%) rotate(${smoothHeading}deg)`;
+  document.getElementById("qiblatLine").style.transform =
+    `translate(-50%, -100%) rotate(${azimuthKiblat}deg)`;
 
   const selisih = ((azimuthKiblat - smoothHeading + 540)%360)-180;
-  document.getElementById("selisihSudut").innerText=`Selisih Sudut : ${Math.abs(selisih).toFixed(1)}°`;
+  document.getElementById("selisihSudut").innerText=
+    `Selisih Sudut : ${Math.abs(selisih).toFixed(1)}°`;
 
-  // Update arah mata angin
-  const index = Math.round(smoothHeading/45)%8;
-  document.getElementById("arahMataAngin").innerText=`Arah Mata Angin : ${arahMataAnginLabel[index]}`;
+  // Update arah lengkap di bawah koordinat
+  const index = Math.round(smoothHeading / 45) % 8;
+  document.getElementById("arahMataAngin").innerText=
+    `Arah Mata Angin : ${arahMataAnginLabel[index]}`;
 });
 
 /* ===============================
