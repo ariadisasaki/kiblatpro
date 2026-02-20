@@ -1,4 +1,3 @@
-
 // praytime.js - Prayer Times Calculator (v3.2)
 // Copyright (c) 2007-2025 Hamid Zarrabi-Zadeh
 // Source: https://praytimes.org
