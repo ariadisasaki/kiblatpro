@@ -23,6 +23,7 @@
     <div>
       <h2 id="menuju">Memuat...</h2>
       <p id="countdown"></p>
+      <p id="prayerAlert" class="blink-text"></p>
     </div>
     <button id="btnKiblat">🧭 QIBLAT</button>
   </div>
@@ -40,7 +41,6 @@
 
 <section id="jadwalList"></section>
 
-
 <!-- OVERLAY KOMPAS -->
 <div id="overlay" class="overlay">
   <div class="compass-card">
@@ -50,9 +50,11 @@
       <div id="compassKoordinat"></div>
     </div>
 
+    <!-- Arah Mata Angin -->
+    <div id="arahMataAngin" class="compass-heading">Arah Mata Angin : N</div>
+
     <div class="compass">
       <div class="ring"></div>
-      <div class="direction-labels"></div>
       <div id="qiblatLine" class="qiblat-line"></div>
       <div id="needle" class="needle"></div>
     </div>
@@ -67,16 +69,14 @@
   </div>
 </div>
 
-<script src="libs/praytime.js"></script>
-<script src="app.js"></script>
 <footer class="footer">
   Developed by 
-  <a href="https://www.facebook.com/share/1C8bjd7Xoh"
-     target="_blank"
-     rel="noopener noreferrer"
-     class="developer-link">
+  <a href="https://www.facebook.com/share/1C8bjd7Xoh" target="_blank" rel="noopener noreferrer" class="developer-link">
      Ariadi Forester
   </a>
 </footer>
+
+<script src="libs/praytime.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
