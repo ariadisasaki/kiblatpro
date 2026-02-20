@@ -174,6 +174,29 @@ async function reverseGeocode() {
 }
 
 /* ===============================
+   FETCH JADWAL SHOLAT OTOMATIS
+================================= */
+
+async function fetchJadwalSholatAPI(lat, lng, method = 4) {
+  try {
+    const timestamp = Math.floor(new Date().getTime() / 1000);
+
+    const res = await fetch(
+      `https://api.aladhan.com/v1/timings/${timestamp}?latitude=${lat}&longitude=${lng}&method=${method}`
+    );
+
+    const json = await res.json();
+
+    if (json.code !== 200) throw new Error("Failed fetch timetable");
+
+    return json.data.timings;
+  } catch (err) {
+    console.error(err);
+    return null;
+  }
+}
+
+/* ===============================
    HITUNG JADWAL
 ================================= */
 
