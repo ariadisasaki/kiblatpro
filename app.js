@@ -25,7 +25,6 @@ const jadwalList = document.getElementById("jadwalList");
 /* ===============================
    REALTIME JAM & TANGGAL
 ================================= */
-
 function updateClock() {
   const now = new Date();
   document.getElementById("jam").innerText =
@@ -43,7 +42,7 @@ setInterval(updateClock, 1000);
 updateClock();
 
 /* ===============================
-   INIT PRAYTIME v3.2
+   INIT PRAYTIME v3.2 + METODE
 ================================= */
 
 let praytime;
@@ -52,13 +51,13 @@ const metodeList = {
   MWL: "Muslim World League",
   ISNA: "ISNA",
   Egypt: "Egypt",
-  Makkah: "Umm Al-Qura (Default)",
+  Makkah: "Umm Al-Qura",
   Karachi: "Karachi",
-  Singapore: "Singapore"
+  Singapore: "Singapore",
+  Kemenag: "Kemenag / MABIMS" // default
 };
 
 function initMetode() {
-
   Object.keys(metodeList).forEach(key => {
     const opt = document.createElement("option");
     opt.value = key;
@@ -66,7 +65,7 @@ function initMetode() {
     metodeSelect.appendChild(opt);
   });
 
-  const saved = localStorage.getItem("metode") || "Makkah";
+  const saved = localStorage.getItem("metode") || "Kemenag"; // default Kemenag
   metodeSelect.value = saved;
 
   praytime = new PrayTime(saved);
@@ -111,7 +110,6 @@ navigator.geolocation.getCurrentPosition(
 /* ===============================
    ELEVATION
 ================================= */
-
 async function getElevation() {
   try {
     const res = await fetch(
@@ -121,7 +119,7 @@ async function getElevation() {
     elevation = data.results[0].elevation;
 
     document.getElementById("koordinat").innerText =
-      `${userLat.toFixed(6)}, ${userLng.toFixed(6)} - ${elevation} mdpl`;
+      `${userLat.toFixed(6)}, ${userLng.toFixed(6)} - ${elevation.toFixed(2)} mdpl`;
   } catch (e) {
     document.getElementById("koordinat").innerText =
       `${userLat.toFixed(6)}, ${userLng.toFixed(6)}`;
@@ -129,9 +127,8 @@ async function getElevation() {
 }
 
 /* ===============================
-   REVERSE GEOCODE (FIX FORMAT)
+   REVERSE GEOCODE
 ================================= */
-
 async function reverseGeocode() {
   try {
     const res = await fetch(
@@ -148,47 +145,32 @@ async function reverseGeocode() {
 
     const negara = data.address.country || "";
 
-    // Formatter bersih tanpa koma ganda
     const lokasiParts = [];
-
     if (desa && desa.trim() !== "") lokasiParts.push(desa.trim());
     if (negara && negara.trim() !== "") lokasiParts.push(negara.trim());
 
     const lokasiFinal = lokasiParts.join(", ");
 
-    // Halaman utama
-    document.getElementById("namaLokasi").innerText =
-      `📍 ${lokasiFinal}`;
-
-    // Popup kompas (1 baris saja)
-    document.getElementById("compassLokasi").innerText =
-      lokasiFinal;
-
+    document.getElementById("namaLokasi").innerText = `📍 ${lokasiFinal}`;
+    document.getElementById("compassLokasi").innerText = lokasiFinal;
     document.getElementById("compassKoordinat").innerText =
-      `${userLat.toFixed(6)}, ${userLng.toFixed(6)} - ${elevation} mdpl`;
-
+      `${userLat.toFixed(6)}, ${userLng.toFixed(6)} - ${elevation.toFixed(2)} mdpl`;
   } catch (e) {
-    document.getElementById("namaLokasi").innerText =
-      "📍 Lokasi tidak ditemukan";
+    document.getElementById("namaLokasi").innerText = "📍 Lokasi tidak ditemukan";
   }
 }
 
 /* ===============================
    FETCH JADWAL SHOLAT OTOMATIS
 ================================= */
-
-async function fetchJadwalSholatAPI(lat, lng, method = 4) {
+async function fetchJadwalSholatAPI(lat, lng, method = 9) { // 9 = Kemenag/MABIMS
   try {
     const timestamp = Math.floor(new Date().getTime() / 1000);
-
     const res = await fetch(
       `https://api.aladhan.com/v1/timings/${timestamp}?latitude=${lat}&longitude=${lng}&method=${method}`
     );
-
     const json = await res.json();
-
     if (json.code !== 200) throw new Error("Failed fetch timetable");
-
     return json.data.timings;
   } catch (err) {
     console.error(err);
@@ -199,7 +181,6 @@ async function fetchJadwalSholatAPI(lat, lng, method = 4) {
 /* ===============================
    HITUNG JADWAL
 ================================= */
-
 async function loadJadwal() {
   if (!userLat || !userLng) return;
 
@@ -210,18 +191,17 @@ async function loadJadwal() {
     currentDateKey = todayKey;
     notified = {};
 
-    // Ambil metode hitung user
-    const metodeValue = localStorage.getItem("metode") || "Makkah";
+    const metodeValue = localStorage.getItem("metode") || "Kemenag";
 
-    // Mapping metode ke Aladhan API
     const aladhanMethod = {
       MWL: 3,
       ISNA: 2,
       Egypt: 5,
       Makkah: 4,
       Karachi: 1,
-      Singapore: 7
-    }[metodeValue] || 4;
+      Singapore: 7,
+      Kemenag: 9
+    }[metodeValue] || 9;
 
     const apiTimes = await fetchJadwalSholatAPI(userLat, userLng, aladhanMethod);
 
@@ -250,11 +230,21 @@ async function loadJadwal() {
 /* ===============================
    RENDER JADWAL
 ================================= */
+const namaSholatID = {
+  fajr: "Subuh",
+  sunrise: "Terbit",
+  dhuhr: "Dzuhur",
+  asr: "Ashar",
+  maghrib: "Maghrib",
+  isha: "Isya"
+};
+
+function labelSholat(key) {
+  return namaSholatID[key] || key;
+}
 
 function renderJadwal(times) {
-
   jadwalList.innerHTML = "";
-
   Object.keys(namaSholatID).forEach(key => {
     const div = document.createElement("div");
     div.className = "jadwal-item";
@@ -269,38 +259,27 @@ function renderJadwal(times) {
 /* ===============================
    COUNTDOWN
 ================================= */
-
 function startCountdown() {
-
-  if (countdownInterval) {
-    clearInterval(countdownInterval);
-  }
+  if (countdownInterval) clearInterval(countdownInterval);
 
   countdownInterval = setInterval(() => {
-
     if (!currentTimes) return;
 
     const now = new Date();
     const todayKey = now.toDateString();
-
-    // Jika hari berganti → reload jadwal
     if (todayKey !== currentDateKey) {
       loadJadwal();
       return;
     }
 
     const urutan = ["fajr","sunrise","dhuhr","asr","maghrib","isha"];
-
     let nextName = null;
     let nextDate = null;
 
     for (let key of urutan) {
-
       const [h, m] = currentTimes[key].split(":").map(Number);
-
       const waktu = new Date();
       waktu.setHours(h, m, 0, 0);
-
       if (waktu > now) {
         nextName = key;
         nextDate = waktu;
@@ -308,47 +287,32 @@ function startCountdown() {
       }
     }
 
-    // Jika semua sudah lewat → Subuh besok
     if (!nextDate) {
       const [h, m] = currentTimes["fajr"].split(":").map(Number);
-
       nextDate = new Date();
       nextDate.setDate(nextDate.getDate() + 1);
       nextDate.setHours(h, m, 0, 0);
-
       nextName = "fajr";
     }
 
     const diffMs = nextDate - now;
     const totalDetik = Math.floor(diffMs / 1000);
-
     const jam = Math.floor(totalDetik / 3600);
     const menit = Math.floor((totalDetik % 3600) / 60);
     const detik = totalDetik % 60;
 
-    let teksWaktu = "";
-
-    if (jam > 0) {
-      teksWaktu =
-        `${jam} jam ` +
-        `${menit.toString().padStart(2, "0")} menit ` +
-        `${detik.toString().padStart(2, "0")} detik lagi`;
-    } else {
-      teksWaktu =
-        `${menit.toString().padStart(2, "0")} menit ` +
-        `${detik.toString().padStart(2, "0")} detik lagi`;
-    }
+    let teksWaktu = jam > 0
+      ? `${jam} jam ${menit.toString().padStart(2,"0")} menit ${detik.toString().padStart(2,"0")} detik lagi`
+      : `${menit.toString().padStart(2,"0")} menit ${detik.toString().padStart(2,"0")} detik lagi`;
 
     document.getElementById("menuju").innerText =
       totalDetik <= 1800
-       ? `Sebentar lagi Waktu ${labelSholat(nextName)}`
-       : `Menuju Waktu ${labelSholat(nextName)}`
+        ? `Sebentar lagi Waktu ${labelSholat(nextName)}`
+        : `Menuju Waktu ${labelSholat(nextName)}`;
 
     document.getElementById("countdown").innerText = teksWaktu;
 
-    if (totalDetik === 0) {
-      checkNotification(nextName, 0);
-    }
+    if (totalDetik === 0) checkNotification(nextName, 0);
 
   }, 1000);
 }
@@ -356,35 +320,25 @@ function startCountdown() {
 /* ===============================
    NOTIFIKASI
 ================================= */
-
 function checkNotification(name, diff) {
   if (diff === 0 && !notified[name]) {
     notified[name] = true;
-
     if (!audioEnabled) return;
 
-    if (name === "fajr") {
-      adzanSubuh.play();
-    } else if (["sunrise"].includes(name)) {
-      new Audio().play();
-    } else {
-      adzanNormal.play();
-    }
+    if (name === "fajr") adzanSubuh.play();
+    else if (["sunrise"].includes(name)) new Audio().play();
+    else adzanNormal.play();
 
     if (Notification.permission === "granted") {
-      new Notification("Adzan Pro", {
-        body: `Waktu ${labelSholat(name)} telah tiba`
-      });
+      new Notification("Adzan Pro", { body: `Waktu ${labelSholat(name)} telah tiba` });
     }
   }
 }
-
 Notification.requestPermission();
 
 /* ===============================
    TOGGLE AUDIO
 ================================= */
-
 document.getElementById("toggleAudio").onclick = () => {
   audioEnabled = !audioEnabled;
   document.getElementById("toggleAudio").innerText =
@@ -394,17 +348,13 @@ document.getElementById("toggleAudio").onclick = () => {
 /* ===============================
    HITUNG KIBLAT
 ================================= */
-
 function hitungKiblat() {
   const dLon = (KAABAH.lng - userLng) * Math.PI / 180;
   const lat1 = userLat * Math.PI / 180;
   const lat2 = KAABAH.lat * Math.PI / 180;
-
   const y = Math.sin(dLon) * Math.cos(lat2);
-  const x =
-    Math.cos(lat1) * Math.sin(lat2) -
-    Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
-
+  const x = Math.cos(lat1) * Math.sin(lat2) -
+            Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
   azimuthKiblat = (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
 
   document.getElementById("azimuthKabah").innerText =
@@ -418,39 +368,31 @@ function hitungKiblat() {
 /* ===============================
    HAVERSINE
 ================================= */
-
 function haversine(lat1, lon1, lat2, lon2) {
   const R = 6371;
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(lat1 * Math.PI / 180) *
-    Math.cos(lat2 * Math.PI / 180) *
-    Math.sin(dLon / 2) ** 2;
-  return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const a = Math.sin(dLat/2)**2 +
+            Math.cos(lat1*Math.PI/180) *
+            Math.cos(lat2*Math.PI/180) *
+            Math.sin(dLon/2)**2;
+  return 2*R*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
 /* ===============================
    KOMPAS SMOOTH
 ================================= */
-
 window.addEventListener("deviceorientation", e => {
   if (e.alpha === null) return;
-
   currentHeading = 360 - e.alpha;
-
-  smoothHeading += (currentHeading - smoothHeading) * 0.1;
+  smoothHeading += (currentHeading - smoothHeading)*0.1;
 
   document.getElementById("needle").style.transform =
     `translate(-50%, -100%) rotate(${smoothHeading}deg)`;
-
   document.getElementById("qiblatLine").style.transform =
     `translate(-50%, -100%) rotate(${azimuthKiblat}deg)`;
 
-  const selisih =
-    ((azimuthKiblat - smoothHeading + 540) % 360) - 180;
-
+  const selisih = ((azimuthKiblat - smoothHeading + 540) % 360) - 180;
   document.getElementById("selisihSudut").innerText =
     `Selisih Sudut : ${Math.abs(selisih).toFixed(1)}°`;
 });
@@ -458,36 +400,9 @@ window.addEventListener("deviceorientation", e => {
 /* ===============================
    OVERLAY
 ================================= */
-
 document.getElementById("btnKiblat").onclick = () => {
   document.getElementById("overlay").style.display = "flex";
 };
-
 document.getElementById("closeCompass").onclick = () => {
   document.getElementById("overlay").style.display = "none";
 };
-
-/* ===============================
-   MAPPING
-================================= */
-
-const namaSholatID = {
-  fajr: "Subuh",
-  sunrise: "Terbit",
-  dhuhr: "Dzuhur",
-  asr: "Ashar",
-  maghrib: "Maghrib",
-  isha: "Isya"
-};
-
-function labelSholat(key) {
-  return namaSholatID[key] || key;
-}
-
-/* ===============================
-   HELPER
-================================= */
-
-function capitalize(str) {
-  return str.charAt(0).toUpperCase() + str.slice(1);
-}
