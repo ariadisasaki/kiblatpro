@@ -159,3 +159,16 @@ body {
 .footer {
   margin-top: auto;
 }
+
+/* Efek Berkedip */
+.blink {
+  animation: blinkAnimation 1s infinite;
+  color: yellow;
+  font-weight: bold;
+}
+
+@keyframes blinkAnimation {
+  0% { opacity: 1; }
+  50% { opacity: 0; }
+  100% { opacity: 1; }
+}
