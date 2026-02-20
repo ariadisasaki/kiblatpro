@@ -292,7 +292,7 @@ function haversine(lat1,lon1,lat2,lon2){
 /* ===============================
    KOMPAS & ARAH MATA ANGIN
 ================================= */
-const arahMataAnginLabel = ["N","NE","E","SE","S","SW","W","NW"];
+const arahMataAnginLabel = ["Utara","Timur Laut","Timur","Tenggara","Selatan","Barat Daya","Barat","Barat Laut"];
 window.addEventListener("deviceorientation", e=>{
   if(e.alpha===null) return;
   currentHeading = 360 - e.alpha;
