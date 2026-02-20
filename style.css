@@ -3,6 +3,10 @@ body{
   font-family:'Montserrat',sans-serif;
   background:#f2f2f2;
   color:#333;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  text-align:center;
 }
 
 header{
@@ -62,9 +66,7 @@ header{
   box-shadow:0 4px 10px rgba(0,0,0,0.05);
 }
 
-
 /* ===== KOMPAS ===== */
-
 .overlay{
   position:fixed;
   inset:0;
@@ -120,16 +122,36 @@ header{
 }
 
 /* ===============================
+   ARAH MATA ANGIN
+================================= */
+.compass-heading {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 10px;
+}
+
+/* ===============================
+   TEKS BERKEDIP ALERT SHOLAT
+================================= */
+.blink-text {
+  font-weight:700;
+  color:#dc2626;
+  animation: blink 1s steps(2, start) infinite;
+}
+@keyframes blink {
+  to { visibility: hidden; }
+}
+
+/* ===============================
    FOOTER DEVELOPER
 ================================= */
-
 .footer {
-  margin-top: 50px;
+  margin-top: auto;
   padding: 18px;
   font-size: 14px;
   color: #94a3b8;
   border-top: 1px solid #334155;
-  text-align: center;
 }
 
 .developer-link {
@@ -142,20 +164,4 @@ header{
 .developer-link:hover {
   color: #7dd3fc;
   text-decoration: underline;
-}
-
-/* ===============================
-   STICKY FOOTER SYSTEM
-================================= */
-
-body {
-  text-align: center;
-  background: #0f172a
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.footer {
-  margin-top: auto;
 }
