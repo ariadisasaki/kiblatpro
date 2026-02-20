@@ -165,3 +165,40 @@ header{
   color:#7dd3fc;
   text-decoration:underline;
 }
+
+/* ===== DISK DINAMIS ===== */
+.compass-disk{
+  position:absolute;
+  width:100%;
+  height:100%;
+  top:0;
+  left:0;
+  border-radius:50%;
+  transition:transform 0.1s linear;
+}
+
+/* Jarum tetap ke atas */
+.needle{
+  position:absolute;
+  width:8px;
+  height:130px;
+  background:linear-gradient(red, darkred);
+  top:50%;
+  left:50%;
+  transform:translate(-50%, -100%);
+  border-radius:6px;
+  z-index:10;
+}
+
+/* Garis kiblat */
+.qiblat-line{
+  position:absolute;
+  width:4px;
+  height:130px;
+  background:green;
+  top:50%;
+  left:50%;
+  transform-origin:50% 100%;
+  transform:translate(-50%, -100%);
+  z-index:9;
+}
