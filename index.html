@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Adzan Pro</title>
+
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="style.css">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#e6ddd2">
+</head>
+
+<body>
+
+<header>
+  <div class="top-bar">
+    <div id="tanggal"></div>
+    <div id="jam"></div>
+  </div>
+
+  <div class="countdown-area">
+    <div>
+      <h2 id="menuju">Memuat...</h2>
+      <p id="countdown"></p>
+    </div>
+    <button id="btnKiblat">🧭 QIBLAT</button>
+  </div>
+
+  <div class="lokasi">
+    <div id="namaLokasi">📍 Mengambil lokasi...</div>
+    <div id="koordinat"></div>
+  </div>
+</header>
+
+<section class="control-bar">
+  <select id="metode"></select>
+  <button id="toggleAudio">🔔 Audio ON</button>
+</section>
+
+<section id="jadwalList"></section>
+
+
+<!-- OVERLAY KOMPAS -->
+<div id="overlay" class="overlay">
+  <div class="compass-card">
+
+    <div class="compass-info">
+      <div id="compassLokasi"></div>
+      <div id="compassKoordinat"></div>
+    </div>
+
+    <div class="compass">
+      <div class="ring"></div>
+      <div class="direction-labels"></div>
+      <div id="qiblatLine" class="qiblat-line"></div>
+      <div id="needle" class="needle"></div>
+    </div>
+
+    <div class="compass-detail">
+      <p id="jarakKabah"></p>
+      <p id="azimuthKabah"></p>
+      <p id="selisihSudut"></p>
+    </div>
+
+    <button id="closeCompass">❌ Tutup</button>
+  </div>
+</div>
+<script src="libs/praytime.js"></script>
+<script src="app.js"></script>
+<footer class="footer">
+  Developed by 
+  <a href="https://www.facebook.com/share/1C8bjd7Xoh"
+     target="_blank"
+     rel="noopener noreferrer"
+     class="developer-link">
+     Ariadi Forester
+  </a>
+</footer>
+</body>
+</html>
