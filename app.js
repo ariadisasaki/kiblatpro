@@ -200,20 +200,47 @@ async function fetchJadwalSholatAPI(lat, lng, method = 4) {
    HITUNG JADWAL
 ================================= */
 
-function loadJadwal() {
+async function loadJadwal() {
   if (!userLat || !userLng) return;
 
   const now = new Date();
   const todayKey = now.toDateString();
 
-  // Jika sudah ganti hari → hitung ulang jadwal
   if (currentDateKey !== todayKey) {
     currentDateKey = todayKey;
+    notified = {};
 
-    currentTimes = praytime
-      .location([userLat, userLng])
-      .timezone(Intl.DateTimeFormat().resolvedOptions().timeZone)
-      .getTimes(now);
+    // Ambil metode hitung user
+    const metodeValue = localStorage.getItem("metode") || "Makkah";
+
+    // Mapping metode ke Aladhan API
+    const aladhanMethod = {
+      MWL: 3,
+      ISNA: 2,
+      Egypt: 5,
+      Makkah: 4,
+      Karachi: 1,
+      Singapore: 7
+    }[metodeValue] || 4;
+
+    const apiTimes = await fetchJadwalSholatAPI(userLat, userLng, aladhanMethod);
+
+    if (!apiTimes) {
+      console.warn("Gagal ambil jadwal dari API, fallback praytime.js");
+      currentTimes = praytime
+        .location([userLat, userLng])
+        .timezone(Intl.DateTimeFormat().resolvedOptions().timeZone)
+        .getTimes(now);
+    } else {
+      currentTimes = {
+        fajr: apiTimes.Fajr,
+        sunrise: apiTimes.Sunrise,
+        dhuhr: apiTimes.Dhuhr,
+        asr: apiTimes.Asr,
+        maghrib: apiTimes.Maghrib,
+        isha: apiTimes.Isha
+      };
+    }
 
     renderJadwal(currentTimes);
     startCountdown();
