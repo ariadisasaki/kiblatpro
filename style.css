@@ -121,47 +121,47 @@ header{
   transform-origin:50% 100%;
 }
 
-/* ===============================
-   ARAH MATA ANGIN
-================================= */
-.compass-heading {
-  font-size: 14px;
-  font-weight: 700;
-  color: #1f2937;
-  margin-bottom: 10px;
+/* Label tepi piringan kompas */
+.direction-labels .direction-label {
+  position:absolute;
+  font-size:12px;
+  font-weight:700;
+  color:#1f2937;
+  transform:translate(-50%,-50%);
 }
 
-/* ===============================
-   TEKS BERKEDIP ALERT SHOLAT
-================================= */
+/* Arah mata angin dinamis */
+.compass-heading {
+  font-size:14px;
+  font-weight:700;
+  color:#1f2937;
+  margin-bottom:10px;
+}
+
+/* TEKS BERKEDIP ALERT SHOLAT */
 .blink-text {
   font-weight:700;
   color:#dc2626;
   animation: blink 1s steps(2, start) infinite;
 }
-@keyframes blink {
-  to { visibility: hidden; }
-}
+@keyframes blink { to { visibility:hidden; } }
 
-/* ===============================
-   FOOTER DEVELOPER
-================================= */
+/* FOOTER DEVELOPER */
 .footer {
   margin-top: auto;
   padding: 18px;
-  font-size: 14px;
-  color: #94a3b8;
-  border-top: 1px solid #334155;
+  font-size:14px;
+  color:#94a3b8;
+  border-top:1px solid #334155;
 }
 
 .developer-link {
-  color: #38bdf8;
-  text-decoration: none;
-  font-weight: 500;
-  transition: 0.3s ease;
+  color:#38bdf8;
+  text-decoration:none;
+  font-weight:500;
+  transition:0.3s ease;
 }
-
 .developer-link:hover {
-  color: #7dd3fc;
-  text-decoration: underline;
+  color:#7dd3fc;
+  text-decoration:underline;
 }
