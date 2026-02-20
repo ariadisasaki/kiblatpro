@@ -1,350 +1,192 @@
-/* ===================================================
-   ADZAN PRO - FINAL PRODUCTION BY ARIADI FORESTER
-=================================================== */
+/* ==========================================
+   ADZAN PRO - FINAL NASIONAL VERSION
+   Method 20 (Kemenag / MABIMS)
+========================================== */
 
-const KAABAH = { lat: 21.4225, lng: 39.8262 };
-
-let countdownInterval = null;
-let currentTimes = null;
-let currentDateKey = null;
 let userLat = null;
 let userLng = null;
-let elevation = 0;
-let azimuthKiblat = 0;
-let currentHeading = 0;
-let smoothHeading = 0;
-let audioEnabled = true;
-let notified = {};
-
-const adzanSubuh = new Audio("audio/adzan_subuh.mp3");
-const adzanNormal = new Audio("audio/adzan_normal.mp3");
-
-const metodeSelect = document.getElementById("metode");
-const jadwalList = document.getElementById("jadwalList");
+let lastLat = null;
+let lastLng = null;
+let currentDateKey = null;
 
 /* ===============================
-   REALTIME JAM & TANGGAL
+   UTIL: HITUNG JARAK (HAVERSINE)
 ================================= */
-function updateClock() {
-  const now = new Date();
-  document.getElementById("jam").innerText =
-    now.toLocaleTimeString("id-ID", { hour12:false });
-  document.getElementById("tanggal").innerText =
-    now.toLocaleDateString("id-ID", { weekday:"long", day:"numeric", month:"long", year:"numeric" });
+function haversine(lat1, lon1, lat2, lon2) {
+  const R = 6371; // km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) *
+    Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) *
+    Math.sin(dLon / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
 }
-setInterval(updateClock, 1000);
-updateClock();
 
 /* ===============================
-   INIT METODE
+   INIT LOKASI & JADWAL
 ================================= */
-let praytime;
-const metodeList = {
-  MWL:"Muslim World League",
-  ISNA:"ISNA",
-  Egypt:"Egypt",
-  Makkah:"Umm Al-Qura",
-  Karachi:"Karachi",
-  Singapore:"Singapore",
-  Kemenag:"Kemenag / MABIMS"
-};
-function initMetode() {
-  Object.keys(metodeList).forEach(key => {
-    const opt = document.createElement("option");
-    opt.value = key;
-    opt.textContent = metodeList[key];
-    metodeSelect.appendChild(opt);
-  });
+async function initLokasiDanJadwal() {
+  document.getElementById("koordinat").innerText =
+    `${userLat.toFixed(6)}, ${userLng.toFixed(6)} - memuat elevasi...`;
 
-  const saved = localStorage.getItem("metode") || "Kemenag";
-  metodeSelect.value = saved;
-  praytime = new PrayTime(saved);
-
-  metodeSelect.addEventListener("change", () => {
-    localStorage.setItem("metode", metodeSelect.value);
-    praytime = new PrayTime(metodeSelect.value);
-    loadJadwal();
-  });
+  await getElevation();
+  await reverseGeocode();
+  hitungKiblat();
+  loadJadwal();
 }
-initMetode();
 
 /* ===============================
-   GPS & ELEVATION
+   GPS AUTO TRACKING NASIONAL
 ================================= */
-navigator.geolocation.getCurrentPosition(
+navigator.geolocation.watchPosition(
   async pos => {
-    userLat = pos.coords.latitude;
-    userLng = pos.coords.longitude;
-    document.getElementById("koordinat").innerText =
-      `${userLat.toFixed(6)}, ${userLng.toFixed(6)} - memuat elevasi...`;
-    await getElevation();
-    await reverseGeocode();
-    hitungKiblat();
-    loadJadwal();
+    const newLat = pos.coords.latitude;
+    const newLng = pos.coords.longitude;
+
+    if (userLat === null) {
+      userLat = newLat;
+      userLng = newLng;
+      lastLat = newLat;
+      lastLng = newLng;
+
+      await initLokasiDanJadwal();
+      return;
+    }
+
+    const distanceMoved = haversine(lastLat, lastLng, newLat, newLng);
+
+    if (distanceMoved > 5) {
+      console.log("📍 Pindah lokasi:", distanceMoved.toFixed(2), "km");
+
+      userLat = newLat;
+      userLng = newLng;
+      lastLat = newLat;
+      lastLng = newLng;
+
+      currentDateKey = null;
+      await initLokasiDanJadwal();
+    }
   },
-  err => { document.getElementById("namaLokasi").innerText = "❌ Izin lokasi ditolak / GPS tidak aktif"; },
-  { enableHighAccuracy:true, timeout:15000, maximumAge:0 }
+  err => {
+    document.getElementById("namaLokasi").innerText =
+      "❌ Izin lokasi ditolak / GPS tidak aktif";
+  },
+  {
+    enableHighAccuracy: true,
+    maximumAge: 0,
+    timeout: 15000
+  }
 );
 
+/* ===============================
+   REVERSE GEOCODE
+================================= */
+async function reverseGeocode() {
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${userLat}&lon=${userLng}`
+    );
+    const data = await res.json();
+    document.getElementById("namaLokasi").innerText =
+      data.address.city ||
+      data.address.town ||
+      data.address.village ||
+      "Lokasi tidak diketahui";
+  } catch {
+    document.getElementById("namaLokasi").innerText =
+      "Lokasi tidak diketahui";
+  }
+}
+
+/* ===============================
+   ELEVASI
+================================= */
 async function getElevation() {
   try {
-    const res = await fetch(`https://api.open-elevation.com/api/v1/lookup?locations=${userLat},${userLng}`);
+    const res = await fetch(
+      `https://api.open-elevation.com/api/v1/lookup?locations=${userLat},${userLng}`
+    );
     const data = await res.json();
-    elevation = data.results[0].elevation;
+    const elev = data.results[0].elevation;
+
     document.getElementById("koordinat").innerText =
-      `${userLat.toFixed(6)}, ${userLng.toFixed(6)} - ${elevation.toFixed(2)} mdpl`;
-  } catch(e) {
+      `${userLat.toFixed(6)}, ${userLng.toFixed(6)} | ${elev} mdpl`;
+  } catch {
     document.getElementById("koordinat").innerText =
       `${userLat.toFixed(6)}, ${userLng.toFixed(6)}`;
   }
 }
 
-async function reverseGeocode() {
-  try {
-    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${userLat}&lon=${userLng}`);
-    const data = await res.json();
-    const desa = data.address.village||data.address.town||data.address.city||data.address.county||"";
-    const negara = data.address.country||"";
-    const lokasiParts=[];
-    if(desa && desa.trim()!=="") lokasiParts.push(desa.trim());
-    if(negara && negara.trim()!=="") lokasiParts.push(negara.trim());
-    const lokasiFinal = lokasiParts.join(", ");
-    document.getElementById("namaLokasi").innerText = `📍 ${lokasiFinal}`;
-    document.getElementById("compassLokasi").innerText = lokasiFinal;
-    document.getElementById("compassKoordinat").innerText =
-      `${userLat.toFixed(6)}, ${userLng.toFixed(6)} - ${elevation.toFixed(2)} mdpl`;
-  } catch(e){ document.getElementById("namaLokasi").innerText = "📍 Lokasi tidak ditemukan"; }
+/* ===============================
+   HITUNG ARAH KIBLAT
+================================= */
+function hitungKiblat() {
+  const kaabaLat = 21.4225;
+  const kaabaLng = 39.8262;
+
+  const dLon = (kaabaLng - userLng) * Math.PI / 180;
+
+  const lat1 = userLat * Math.PI / 180;
+  const lat2 = kaabaLat * Math.PI / 180;
+
+  const y = Math.sin(dLon) * Math.cos(lat2);
+  const x =
+    Math.cos(lat1) * Math.sin(lat2) -
+    Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+
+  let brng = Math.atan2(y, x) * 180 / Math.PI;
+  brng = (brng + 360) % 360;
+
+  document.getElementById("arahKiblat").innerText =
+    "Arah Kiblat: " + brng.toFixed(2) + "°";
 }
 
 /* ===============================
-   FETCH JADWAL SHOLAT OTOMATIS
+   LOAD JADWAL SHOLAT NASIONAL
 ================================= */
-async function fetchJadwalSholatAPI(lat,lng,method=9) {
-  try {
-    const timestamp = Math.floor(new Date().getTime()/1000);
-    const res = await fetch(`https://api.aladhan.com/v1/timings/${timestamp}?latitude=${lat}&longitude=${lng}&method=${method}`);
-    const json = await res.json();
-    if(json.code!==200) throw new Error("Failed fetch timetable");
-    return json.data.timings;
-  } catch(err){ console.error(err); return null; }
-}
+async function loadJadwal() {
+  const today = new Date();
+  const dateKey = today.toISOString().split("T")[0];
 
-/* ===============================
-   HITUNG & RENDER JADWAL
-================================= */
-const namaSholatID = { fajr:"Subuh", sunrise:"Terbit", dhuhr:"Dzuhur", asr:"Ashar", maghrib:"Maghrib", isha:"Isya"};
+  if (dateKey === currentDateKey) return;
 
-function labelSholat(key){ return namaSholatID[key]||key; }
+  currentDateKey = dateKey;
 
-function renderJadwal(times){
-  jadwalList.innerHTML="";
-  Object.keys(namaSholatID).forEach(key=>{
-    const div=document.createElement("div");
-    div.className="jadwal-item";
-    div.innerHTML=`<span>${labelSholat(key)}</span><span>${times[key]}</span>`;
-    jadwalList.appendChild(div);
-  });
-}
+  const cacheKey =
+    `jadwal_${dateKey}_${userLat.toFixed(2)}_${userLng.toFixed(2)}`;
 
-async function loadJadwal(){
-  if(!userLat||!userLng) return;
-  const now=new Date();
-  const todayKey=now.toDateString();
-  if(currentDateKey!==todayKey){ 
-    currentDateKey=todayKey; 
-    notified={};
-    const metodeValue=localStorage.getItem("metode")||"Kemenag";
-    const aladhanMethod={
-      MWL:3, ISNA:2, Egypt:5, Makkah:4, Karachi:1, Singapore:7, Kemenag:9
-    }[metodeValue]||9;
-    const apiTimes = await fetchJadwalSholatAPI(userLat,userLng,aladhanMethod);
-    if(!apiTimes){
-      currentTimes = praytime.location([userLat,userLng])
-        .timezone(Intl.DateTimeFormat().resolvedOptions().timeZone)
-        .getTimes(now);
-    } else {
-      currentTimes={
-        fajr:apiTimes.Fajr, sunrise:apiTimes.Sunrise, dhuhr:apiTimes.Dhuhr,
-        asr:apiTimes.Asr, maghrib:apiTimes.Maghrib, isha:apiTimes.Isha
-      };
-    }
-    renderJadwal(currentTimes);
-    startCountdown();
+  const cached = localStorage.getItem(cacheKey);
+
+  if (cached) {
+    tampilkanJadwal(JSON.parse(cached));
+    return;
   }
+
+  const response = await fetch(
+    `https://api.aladhan.com/v1/timings?latitude=${userLat}&longitude=${userLng}&method=20`
+  );
+
+  const data = await response.json();
+  const timings = data.data.timings;
+
+  localStorage.setItem(cacheKey, JSON.stringify(timings));
+  tampilkanJadwal(timings);
 }
 
 /* ===============================
-   COUNTDOWN & ALERT BERKEDIP
+   TAMPILKAN JADWAL
 ================================= */
-function startCountdown(){
-  if(countdownInterval) clearInterval(countdownInterval);
-  countdownInterval=setInterval(()=>{
-    if(!currentTimes) return;
-    const now=new Date();
-    const todayKey=now.toDateString();
-    if(todayKey!==currentDateKey){ loadJadwal(); return; }
-
-    const urutan=["fajr","sunrise","dhuhr","asr","maghrib","isha"];
-    let nextName=null, nextDate=null;
-    for(let key of urutan){
-      const [h,m]=currentTimes[key].split(":").map(Number);
-      const waktu=new Date();
-      waktu.setHours(h,m,0,0);
-      if(waktu>now){ nextName=key; nextDate=waktu; break; }
-    }
-    if(!nextDate){
-      const [h,m]=currentTimes["fajr"].split(":").map(Number);
-      nextDate=new Date(); nextDate.setDate(nextDate.getDate()+1);
-      nextDate.setHours(h,m,0,0); nextName="fajr";
-    }
-
-    const diffMs=nextDate-now;
-    const totalDetik=Math.floor(diffMs/1000);
-    const jam=Math.floor(totalDetik/3600);
-    const menit=Math.floor((totalDetik%3600)/60);
-    const detik=totalDetik%60;
-    let teksWaktu=jam>0?`${jam} jam ${menit.toString().padStart(2,"0")} menit ${detik.toString().padStart(2,"0")} detik lagi`
-      :`${menit.toString().padStart(2,"0")} menit ${detik.toString().padStart(2,"0")} detik lagi`;
-
-    document.getElementById("menuju").innerText=totalDetik<=1800?`Sebentar lagi Waktu ${labelSholat(nextName)}`:`Menuju Waktu ${labelSholat(nextName)}`;
-    document.getElementById("countdown").innerText=teksWaktu;
-
-    checkNearPrayer();
-    if(totalDetik===0) checkNotification(nextName,0);
-  },1000);
+function tampilkanJadwal(timings) {
+  document.getElementById("subuh").innerText = timings.Fajr;
+  document.getElementById("terbit").innerText = timings.Sunrise;
+  document.getElementById("dzuhur").innerText = timings.Dhuhr;
+  document.getElementById("ashar").innerText = timings.Asr;
+  document.getElementById("maghrib").innerText = timings.Maghrib;
+  document.getElementById("isya").innerText = timings.Isha;
 }
-
-/* ===============================
-   ALERT BERKEDIP 10 MENIT SEBELUM SHOLAT
-================================= */
-function checkNearPrayer(){
-  if(!currentTimes) return;
-  const now=new Date();
-  const currentMinutes=now.getHours()*60+now.getMinutes();
-  const alertText=document.getElementById("prayerAlert");
-  let found=false;
-  for(let key in currentTimes){
-    const [h,m]=currentTimes[key].split(":").map(Number);
-    const prayerMinutes=h*60+m;
-    const diff=prayerMinutes-currentMinutes;
-    if(diff>0&&diff<=10){
-      alertText.textContent=`⏰ ${labelSholat(key)} sebentar lagi (${currentTimes[key]})`;
-      alertText.classList.add("blink-text");
-      found=true;
-      break;
-    }
-  }
-  if(!found){ alertText.textContent=""; alertText.classList.remove("blink-text"); }
-}
-setInterval(checkNearPrayer,30000);
-checkNearPrayer();
-
-/* ===============================
-   NOTIFIKASI
-================================= */
-function checkNotification(name,diff){
-  if(diff===0&&!notified[name]){
-    notified[name]=true;
-    if(!audioEnabled) return;
-    if(name==="fajr") adzanSubuh.play();
-    else if(["sunrise"].includes(name)) new Audio().play();
-    else adzanNormal.play();
-
-    if(Notification.permission==="granted"){
-      new Notification("Adzan Pro",{body:`Waktu ${labelSholat(name)} telah tiba`});
-    }
-  }
-}
-Notification.requestPermission();
-
-/* ===============================
-   TOGGLE AUDIO
-================================= */
-document.getElementById("toggleAudio").onclick=()=>{
-  audioEnabled=!audioEnabled;
-  document.getElementById("toggleAudio").innerText=audioEnabled?"🔔 Audio ON":"🔕 Audio OFF";
-};
-
-/* ===============================
-   HITUNG KIBLAT
-================================= */
-function hitungKiblat(){
-  const dLon=(KAABAH.lng-userLng)*Math.PI/180;
-  const lat1=userLat*Math.PI/180;
-  const lat2=KAABAH.lat*Math.PI/180;
-  const y=Math.sin(dLon)*Math.cos(lat2);
-  const x=Math.cos(lat1)*Math.sin(lat2)-Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon);
-  azimuthKiblat=(Math.atan2(y,x)*180/Math.PI+360)%360;
-
-  document.getElementById("azimuthKabah").innerText=`Azimuth Ka'bah : ${azimuthKiblat.toFixed(2)}°`;
-  const jarak = haversine(userLat,userLng,KAABAH.lat,KAABAH.lng);
-  document.getElementById("jarakKabah").innerText=`Jarak ke Ka'bah : ${jarak.toFixed(2)} Km`;
-}
-
-function haversine(lat1,lon1,lat2,lon2){
-  const R=6371;
-  const dLat=(lat2-lat1)*Math.PI/180;
-  const dLon=(lon2-lon1)*Math.PI/180;
-  const a=Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
-  return 2*R*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-}
-
-/* ===============================
-   KOMPAS & ARAH MATA ANGIN
-================================= */
-
-// Label arah lengkap untuk teks bawah koordinat
-const arahMataAnginLabel = ["Utara","Timur Laut","Timur","Tenggara","Selatan","Barat Daya","Barat","Barat Laut"];
-
-// Label singkat untuk piringan kompas
-const arahMataAnginSingkat = ["N","NE","E","SE","S","SW","W","NW"];
-
-// Buat label piringan kompas
-const directionLabelsContainer = document.getElementById("directionLabels");
-function buatLabelPiringan() {
-  arahMataAnginSingkat.forEach((label, index) => {
-    const div = document.createElement("div");
-    div.className = "direction-label";
-    div.innerText = label;
-
-    const angle = (index * 360 / arahMataAnginSingkat.length) * Math.PI / 180;
-    const x = 50 + Math.sin(angle) * 50;
-    const y = 50 - Math.cos(angle) * 50;
-    div.style.left = `${x}%`;
-    div.style.top = `${y}%`;
-
-    directionLabelsContainer.appendChild(div);
-  });
-}
-buatLabelPiringan();
-
-// Event device orientation
-window.addEventListener("deviceorientation", e=>{
-  if(e.alpha===null) return;
-  currentHeading = 360 - e.alpha;
-  smoothHeading += (currentHeading - smoothHeading)*0.1;
-
-  document.getElementById("needle").style.transform =
-    `translate(-50%, -100%) rotate(${smoothHeading}deg)`;
-  document.getElementById("qiblatLine").style.transform =
-    `translate(-50%, -100%) rotate(${azimuthKiblat}deg)`;
-
-  const selisih = ((azimuthKiblat - smoothHeading + 540)%360)-180;
-  document.getElementById("selisihSudut").innerText=
-    `Selisih Sudut : ${Math.abs(selisih).toFixed(1)}°`;
-
-  // Update arah lengkap di bawah koordinat
-  const index = Math.round(smoothHeading / 45) % 8;
-  document.getElementById("arahMataAngin").innerText=
-    `Arah Mata Angin : ${arahMataAnginLabel[index]}`;
-});
-
-/* ===============================
-   OVERLAY KOMPAS
-================================= */
-document.getElementById("btnKiblat").onclick=()=>{
-  document.getElementById("overlay").style.display="flex";
-};
-document.getElementById("closeCompass").onclick=()=>{
-  document.getElementById("overlay").style.display="none";
-};
