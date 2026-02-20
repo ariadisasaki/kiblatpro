@@ -136,41 +136,88 @@ const namaSholatID = { fajr:"Subuh", sunrise:"Terbit", dhuhr:"Dzuhur", asr:"Asha
 
 function labelSholat(key){ return namaSholatID[key]||key; }
 
-function renderJadwal(times){
+/* ===============================
+   TAMPILKAN JADWAL (REVISI)
+================================= */
+function tampilkanJadwal(times){
   jadwalList.innerHTML="";
   Object.keys(namaSholatID).forEach(key=>{
     const div=document.createElement("div");
     div.className="jadwal-item";
-    div.innerHTML=`<span>${labelSholat(key)}</span><span>${times[key]}</span>`;
+
+    const jam = times[key]?.substring(0,5) || "--:--";
+
+    div.innerHTML=`
+      <span>${labelSholat(key)}</span>
+      <span>${jam}</span>
+    `;
+
     jadwalList.appendChild(div);
   });
 }
 
+/* ===============================
+   LOAD JADWAL FINAL STABIL
+   Default Kemenag = Method 20
+================================= */
 async function loadJadwal(){
-  if(!userLat||!userLng) return;
+  if(!userLat || !userLng) return;
+
   const now=new Date();
   const todayKey=now.toDateString();
-  if(currentDateKey!==todayKey){ 
-    currentDateKey=todayKey; 
-    notified={};
-    const metodeValue=localStorage.getItem("metode")||"Kemenag";
-    const aladhanMethod={
-      MWL:3, ISNA:2, Egypt:5, Makkah:4, Karachi:1, Singapore:7, Kemenag:9
-    }[metodeValue]||9;
-    const apiTimes = await fetchJadwalSholatAPI(userLat,userLng,aladhanMethod);
-    if(!apiTimes){
-      currentTimes = praytime.location([userLat,userLng])
-        .timezone(Intl.DateTimeFormat().resolvedOptions().timeZone)
-        .getTimes(now);
-    } else {
-      currentTimes={
-        fajr:apiTimes.Fajr, sunrise:apiTimes.Sunrise, dhuhr:apiTimes.Dhuhr,
-        asr:apiTimes.Asr, maghrib:apiTimes.Maghrib, isha:apiTimes.Isha
-      };
-    }
-    renderJadwal(currentTimes);
-    startCountdown();
+
+  if(currentDateKey===todayKey && currentTimes) return;
+
+  currentDateKey=todayKey;
+  notified={};
+
+  const metodeValue=localStorage.getItem("metode")||"Kemenag";
+
+  const aladhanMethod={
+    MWL:3,
+    ISNA:2,
+    Egypt:5,
+    Makkah:4,
+    Karachi:1,
+    Singapore:7,
+    Kemenag:20   // 🔥 RESMI KEMENAG RI
+  }[metodeValue]||20;
+
+  try{
+    const res = await fetch(
+      `https://api.aladhan.com/v1/timings?latitude=${userLat}&longitude=${userLng}&method=${aladhanMethod}`
+    );
+
+    if(!res.ok) throw new Error("Network error");
+
+    const json = await res.json();
+    if(json.code!==200) throw new Error("API error");
+
+    const apiTimes = json.data.timings;
+
+    currentTimes={
+      fajr:apiTimes.Fajr.substring(0,5),
+      sunrise:apiTimes.Sunrise.substring(0,5),
+      dhuhr:apiTimes.Dhuhr.substring(0,5),
+      asr:apiTimes.Asr.substring(0,5),
+      maghrib:apiTimes.Maghrib.substring(0,5),
+      isha:apiTimes.Isha.substring(0,5)
+    };
+
+  }catch(err){
+
+    console.warn("API gagal, fallback ke PrayTime",err);
+
+    // 🔄 FALLBACK ke PrayTime (offline calculation)
+    currentTimes = praytime
+      .location([userLat,userLng])
+      .timezone(Intl.DateTimeFormat().resolvedOptions().timeZone)
+      .getTimes(now);
+
   }
+
+  tampilkanJadwal(currentTimes);
+  startCountdown();
 }
 
 /* ===============================
