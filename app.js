@@ -441,3 +441,48 @@ function labelSholat(key) {
 function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
+
+// ===============================
+// JADWAL SHOLAT (Contoh Manual)
+// ===============================
+
+const prayerTimes = {
+  subuh: "04:45",
+  dzuhur: "12:00",
+  ashar: "15:15",
+  maghrib: "18:10",
+  isya: "19:20"
+};
+
+function checkPrayerTime() {
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+  const alertText = document.getElementById("prayerAlert");
+
+  let isNearPrayer = false;
+
+  for (let prayer in prayerTimes) {
+    const [hour, minute] = prayerTimes[prayer].split(":").map(Number);
+    const prayerMinutes = hour * 60 + minute;
+
+    const diff = prayerMinutes - currentMinutes;
+
+    // Jika 10 menit sebelum waktu sholat
+    if (diff > 0 && diff <= 10) {
+      alertText.textContent = `⏰ ${prayer.toUpperCase()} sebentar lagi (${prayerTimes[prayer]})`;
+      alertText.classList.add("blink");
+      isNearPrayer = true;
+      break;
+    }
+  }
+
+  if (!isNearPrayer) {
+    alertText.textContent = "";
+    alertText.classList.remove("blink");
+  }
+}
+
+// Cek setiap 30 detik
+setInterval(checkPrayerTime, 30000);
+checkPrayerTime();
