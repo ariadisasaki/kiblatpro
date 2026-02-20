@@ -113,7 +113,7 @@ async function reverseGeocode() {
     document.getElementById("compassLokasi").innerText = lokasiFinal;
     document.getElementById("compassKoordinat").innerText =
       `${userLat.toFixed(6)}, ${userLng.toFixed(6)} - ${elevation.toFixed(2)} mdpl`;
-  } catch(e){ document.getElementById("namaLokasi").innerText = "📍 Silakan refresh halaman"; }
+  } catch(e){ document.getElementById("namaLokasi").innerText = "📍 Silakan refresh halaman.."; }
 }
 
 /* ===============================
