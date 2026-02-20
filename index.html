@@ -54,14 +54,20 @@
     <div id="arahMataAngin" class="compass-heading">Arah Mata Angin : Utara</div>
 
     <div class="compass">
-      <div class="ring"></div>
 
-      <!-- Container label piringan statis -->
-      <div id="directionLabels" class="direction-labels"></div>
+  <!-- Piringan yang akan berputar -->
+  <div id="compassDisk" class="compass-disk">
+    <div class="ring"></div>
+    <div id="directionLabels" class="direction-labels"></div>
+  </div>
 
-      <div id="qiblatLine" class="qiblat-line"></div>
-      <div id="needle" class="needle"></div>
-    </div>
+  <!-- Garis Kiblat (dinamis relatif disk) -->
+  <div id="qiblatLine" class="qiblat-line"></div>
+
+  <!-- Jarum tetap statis -->
+  <div id="needle" class="needle"></div>
+
+</div>
 
     <div class="compass-detail">
       <p id="jarakKabah"></p>
