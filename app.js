@@ -15,36 +15,22 @@ let currentHeading = 0;
 let smoothHeading = 0;
 let audioEnabled = true;
 let notified = {};
-let heading = 0;
-let qiblatBearing = 0;
 
-/* ===== KONTROL GETAR KIBLAT ===== */
-let qiblaAligned = false;
-const QIBLA_TOLERANCE = 3; // derajat toleransi
+const QIBLA_TOLERANCE = 5; // bisa 3–7 derajat
+let sudahGetar = false;
 
-function checkQiblaAlignment(heading, qiblatBearing){
+function checkQiblaAlignment(heading, qibla){
+  const selisih = ((qibla - heading + 540) % 360) - 180;
 
-  let diff = Math.abs(heading - qiblatBearing);
-
-  // Normalisasi jika lebih dari 180°
-  if(diff > 180){
-    diff = 360 - diff;
-  }
-
-  if(diff <= QIBLA_TOLERANCE){
-
-    if(!qiblaAligned){
-      qiblaAligned = true;
-
-      if("vibrate" in navigator){
-        navigator.vibrate([200, 100, 200]); // getar 2x
+  if(Math.abs(selisih) <= QIBLA_TOLERANCE){
+    if(!sudahGetar){
+      if(navigator.vibrate){
+        navigator.vibrate([200,100,200]); // pola getar
       }
-
-      console.log("Sudah menghadap kiblat");
+      sudahGetar = true;
     }
-
   } else {
-    qiblaAligned = false;
+    sudahGetar = false;
   }
 }
 
