@@ -15,6 +15,12 @@ let currentHeading = 0;
 let smoothHeading = 0;
 let audioEnabled = true;
 let notified = {};
+let heading = 0;
+let qiblatBearing = 0;
+
+/* ===== KONTROL GETAR KIBLAT ===== */
+let qiblaAligned = false;
+const QIBLA_TOLERANCE = 3; // derajat toleransi
 
 const adzanSubuh = new Audio("audio/adzan_subuh.mp3");
 const adzanNormal = new Audio("audio/adzan_normal.mp3");
