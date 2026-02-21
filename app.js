@@ -16,24 +16,6 @@ let smoothHeading = 0;
 let audioEnabled = true;
 let notified = {};
 
-const QIBLA_TOLERANCE = 5; // bisa 3–7 derajat
-let sudahGetar = false;
-
-function checkQiblaAlignment(heading, qibla){
-  const selisih = ((qibla - heading + 540) % 360) - 180;
-
-  if(Math.abs(selisih) <= QIBLA_TOLERANCE){
-    if(!sudahGetar){
-      if(navigator.vibrate){
-        navigator.vibrate([200,100,200]); // pola getar
-      }
-      sudahGetar = true;
-    }
-  } else {
-    sudahGetar = false;
-  }
-}
-
 const adzanSubuh = new Audio("audio/adzan_subuh.mp3");
 const adzanNormal = new Audio("audio/adzan_normal.mp3");
 
@@ -424,8 +406,7 @@ window.addEventListener("deviceorientation", e=>{
   if(e.alpha===null) return;
   currentHeading = 360 - e.alpha;
   smoothHeading += (currentHeading - smoothHeading)*0.1;
-  checkQiblaAlignment(smoothHeading, azimuthKiblat);
-   
+
   // Putar piringan berlawanan arah hadap HP
 document.getElementById("compassDisk").style.transform =
   `rotate(${-smoothHeading}deg)`;
