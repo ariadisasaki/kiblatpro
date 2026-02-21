@@ -296,10 +296,15 @@ function checkNotification(name,diff){
   if(diff===0&&!notified[name]){
     notified[name]=true;
     if(!audioEnabled) return;
-    if(name==="fajr") adzanSubuh.play();
-    else if(name==="imsak") adzanSubuh.play(); // gunakan suara Subuh untuk Imsak
-    else if(["sunrise"].includes(name)) new Audio().play();
-    else adzanNormal.play();
+    if(name==="fajr") {
+    adzanSubuh.play();
+    }
+    else if(["imsak","sunrise"].includes(name)) {
+    // tidak ada suara atau suara ringan
+    }
+    else {
+    adzanNormal.play();
+    }
 
     if(Notification.permission==="granted"){
       new Notification("Adzan Pro",{body:`Waktu ${labelSholat(name)} telah tiba`});
