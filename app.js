@@ -424,7 +424,7 @@ window.addEventListener("deviceorientation", e=>{
   if(e.alpha===null) return;
   currentHeading = 360 - e.alpha;
   smoothHeading += (currentHeading - smoothHeading)*0.1;
-  checkQiblaAlignment(heading, qiblatBearing);
+  checkQiblaAlignment(smoothHeading, azimuthKiblat);
    
   // Putar piringan berlawanan arah hadap HP
 document.getElementById("compassDisk").style.transform =
