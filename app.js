@@ -1,5 +1,5 @@
 /* ===================================================
-   ADZAN PRO - FINAL OPTIMIZED PRODUCTION
+   ADZAN PRO - FINAL FULL OPTIMIZED VERSION
 =================================================== */
 
 const KAABAH = { lat: 21.4225, lng: 39.8262 };
@@ -79,7 +79,7 @@ function initMetode() {
 initMetode();
 
 /* ===============================
-   GPS & ELEVATION (PARALLEL)
+   GPS & LOKASI (PARALLEL API)
 ================================= */
 navigator.geolocation.getCurrentPosition(
   async pos => {
@@ -120,30 +120,68 @@ async function reverseGeocode() {
       `https://nominatim.openstreetmap.org/reverse?format=json&lat=${userLat}&lon=${userLng}`
     );
     const data = await res.json();
+
     const desa = data.address.village ||
                  data.address.town ||
                  data.address.city ||
                  data.address.county || "";
+
     const negara = data.address.country || "";
 
     const lokasiFinal = [desa, negara]
       .filter(v => v && v.trim() !== "")
       .join(", ");
 
-    document.getElementById("namaLokasi").innerText =
-      `📍 ${lokasiFinal}`;
+    document.getElementById("namaLokasi").innerText = `📍 ${lokasiFinal}`;
+    document.getElementById("compassLokasi").innerText = lokasiFinal;
 
     document.getElementById("koordinat").innerText =
       `${userLat.toFixed(6)}, ${userLng.toFixed(6)} - ${elevation.toFixed(2)} mdpl`;
 
-    document.getElementById("compassLokasi").innerText = lokasiFinal;
     document.getElementById("compassKoordinat").innerText =
       `${userLat.toFixed(6)}, ${userLng.toFixed(6)} - ${elevation.toFixed(2)} mdpl`;
+
   } catch(e){}
 }
 
 /* ===============================
-   LOAD JADWAL (INSTANT + CACHE)
+   HITUNG KIBLAT
+================================= */
+function hitungKiblat(){
+  const dLon=(KAABAH.lng-userLng)*Math.PI/180;
+  const lat1=userLat*Math.PI/180;
+  const lat2=KAABAH.lat*Math.PI/180;
+
+  const y=Math.sin(dLon)*Math.cos(lat2);
+  const x=Math.cos(lat1)*Math.sin(lat2) -
+          Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon);
+
+  azimuthKiblat=(Math.atan2(y,x)*180/Math.PI+360)%360;
+
+  document.getElementById("azimuthKabah").innerText =
+    `Azimuth Ka'bah : ${azimuthKiblat.toFixed(2)}°`;
+
+  const jarak = haversine(userLat,userLng,KAABAH.lat,KAABAH.lng);
+
+  document.getElementById("jarakKabah").innerText =
+    `Jarak ke Ka'bah : ${jarak.toFixed(2)} Km`;
+}
+
+function haversine(lat1,lon1,lat2,lon2){
+  const R=6371;
+  const dLat=(lat2-lat1)*Math.PI/180;
+  const dLon=(lon2-lon1)*Math.PI/180;
+
+  const a=Math.sin(dLat/2)**2 +
+           Math.cos(lat1*Math.PI/180) *
+           Math.cos(lat2*Math.PI/180) *
+           Math.sin(dLon/2)**2;
+
+  return 2*R*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+/* ===============================
+   JADWAL SHOLAT
 ================================= */
 const namaSholatID = {
   fajr:"Subuh",
@@ -170,23 +208,15 @@ function tampilkanJadwal(times){
 async function loadJadwal(force=false){
   if(!userLat || !userLng) return;
 
-  const now = new Date();
-  const todayKey = now.toDateString();
+  const now=new Date();
+  const todayKey=now.toDateString();
 
-  if(!force && currentDateKey === todayKey && currentTimes) return;
+  if(!force && currentDateKey===todayKey && currentTimes) return;
 
-  currentDateKey = todayKey;
-  notified = {};
+  currentDateKey=todayKey;
+  notified={};
 
-  // 🔥 CACHE
-  const cache = JSON.parse(localStorage.getItem("jadwalCache") || "{}");
-  if(cache.date === todayKey){
-    currentTimes = cache.times;
-    tampilkanJadwal(currentTimes);
-    startCountdown();
-  }
-
-  // 🔥 INSTANT OFFLINE CALCULATION
+  // OFFLINE INSTANT
   currentTimes = praytime
     .location([userLat,userLng])
     .timezone(Intl.DateTimeFormat().resolvedOptions().timeZone)
@@ -194,42 +224,10 @@ async function loadJadwal(force=false){
 
   tampilkanJadwal(currentTimes);
   startCountdown();
-
-  // 🔄 UPDATE BACKGROUND API
-  try{
-    const metodeValue = localStorage.getItem("metode") || "Kemenag";
-    const aladhanMethod = {
-      MWL:3, ISNA:2, Egypt:5, Makkah:4,
-      Karachi:1, Singapore:7, Kemenag:20
-    }[metodeValue] || 20;
-
-    const res = await fetch(
-      `https://api.aladhan.com/v1/timings?latitude=${userLat}&longitude=${userLng}&method=${aladhanMethod}`
-    );
-    const json = await res.json();
-    const apiTimes = json.data.timings;
-
-    currentTimes = {
-      fajr:apiTimes.Fajr.substring(0,5),
-      sunrise:apiTimes.Sunrise.substring(0,5),
-      dhuhr:apiTimes.Dhuhr.substring(0,5),
-      asr:apiTimes.Asr.substring(0,5),
-      maghrib:apiTimes.Maghrib.substring(0,5),
-      isha:apiTimes.Isha.substring(0,5)
-    };
-
-    tampilkanJadwal(currentTimes);
-
-    localStorage.setItem("jadwalCache", JSON.stringify({
-      date: todayKey,
-      times: currentTimes
-    }));
-
-  } catch(e){}
 }
 
 /* ===============================
-   COUNTDOWN
+   COUNTDOWN + ALERT
 ================================= */
 function startCountdown(){
   if(countdownInterval) clearInterval(countdownInterval);
@@ -268,14 +266,82 @@ function startCountdown(){
     document.getElementById("countdown").innerText =
       `${jam>0?jam+" jam ":""}${menit.toString().padStart(2,"0")} menit ${detik.toString().padStart(2,"0")} detik lagi`;
 
+    checkNearPrayer();
+    if(diff===0) checkNotification(nextName);
   },1000);
 }
 
 /* ===============================
-   KOMPAS OPTIMIZED
+   ALERT 10 MENIT
 ================================= */
+function checkNearPrayer(){
+  const now=new Date();
+  const currentMinutes=now.getHours()*60+now.getMinutes();
+  const alertText=document.getElementById("prayerAlert");
+
+  let found=false;
+
+  for(let key in currentTimes){
+    const [h,m]=currentTimes[key].split(":").map(Number);
+    const prayerMinutes=h*60+m;
+    const diff=prayerMinutes-currentMinutes;
+
+    if(diff>0 && diff<=10){
+      alertText.textContent =
+        `⏰ ${namaSholatID[key]} sebentar lagi (${currentTimes[key]})`;
+      alertText.classList.add("blink-text");
+      found=true;
+      break;
+    }
+  }
+
+  if(!found){
+    alertText.textContent="";
+    alertText.classList.remove("blink-text");
+  }
+}
+
+/* ===============================
+   NOTIFIKASI
+================================= */
+function checkNotification(name){
+  if(notified[name]) return;
+
+  notified[name]=true;
+
+  if(audioEnabled){
+    if(name==="fajr") adzanSubuh.play();
+    else adzanNormal.play();
+  }
+
+  if(Notification.permission==="granted"){
+    new Notification("Adzan Pro",{
+      body:`Waktu ${namaSholatID[name]} telah tiba`
+    });
+  }
+}
+Notification.requestPermission();
+
+/* ===============================
+   TOGGLE AUDIO
+================================= */
+document.getElementById("toggleAudio").onclick=()=>{
+  audioEnabled=!audioEnabled;
+  document.getElementById("toggleAudio").innerText=
+    audioEnabled?"🔔 Audio ON":"🔕 Audio OFF";
+};
+
+/* ===============================
+   KOMPAS 360° + SMOOTH
+================================= */
+
+const arahMataAnginLabel =
+["Utara","Timur Laut","Timur","Tenggara",
+ "Selatan","Barat Daya","Barat","Barat Laut"];
+
 window.addEventListener("deviceorientation", e=>{
   if(e.alpha===null) return;
+
   currentHeading = 360 - e.alpha;
 
   if(!orientationRunning){
@@ -293,5 +359,25 @@ function updateCompass(){
   document.getElementById("qiblatLine").style.transform =
     `translate(-50%, -100%) rotate(${azimuthKiblat - smoothHeading}deg)`;
 
-  orientationRunning = false;
+  const selisih = ((azimuthKiblat - smoothHeading + 540)%360)-180;
+
+  document.getElementById("selisihSudut").innerText =
+    `Selisih Sudut : ${Math.abs(selisih).toFixed(1)}°`;
+
+  const index = Math.round(smoothHeading / 45) % 8;
+
+  document.getElementById("arahMataAngin").innerText =
+    `Arah Mata Angin : ${arahMataAnginLabel[index]}`;
+
+  orientationRunning=false;
 }
+
+/* ===============================
+   OVERLAY
+================================= */
+document.getElementById("btnKiblat").onclick=()=>{
+  document.getElementById("overlay").style.display="flex";
+};
+document.getElementById("closeCompass").onclick=()=>{
+  document.getElementById("overlay").style.display="none";
+};
