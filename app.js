@@ -22,6 +22,32 @@ let qiblatBearing = 0;
 let qiblaAligned = false;
 const QIBLA_TOLERANCE = 3; // derajat toleransi
 
+function checkQiblaAlignment(heading, qiblatBearing){
+
+  let diff = Math.abs(heading - qiblatBearing);
+
+  // Normalisasi jika lebih dari 180°
+  if(diff > 180){
+    diff = 360 - diff;
+  }
+
+  if(diff <= QIBLA_TOLERANCE){
+
+    if(!qiblaAligned){
+      qiblaAligned = true;
+
+      if("vibrate" in navigator){
+        navigator.vibrate([200, 100, 200]); // getar 2x
+      }
+
+      console.log("Sudah menghadap kiblat");
+    }
+
+  } else {
+    qiblaAligned = false;
+  }
+}
+
 const adzanSubuh = new Audio("audio/adzan_subuh.mp3");
 const adzanNormal = new Audio("audio/adzan_normal.mp3");
 
