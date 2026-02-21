@@ -241,3 +241,58 @@ header{
   transform:translate(-50%, -100%);
   z-index:9;
 }
+
+/* ===== RESPONSIVE LAYOUT ===== */
+@media (max-width: 600px) {
+
+  header {
+    padding: 15px;
+  }
+
+  .top-bar {
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+  }
+
+  #btnKiblat {
+    width: 100%;
+    margin-top: 8px;
+  }
+
+  .control-bar {
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+  }
+
+  select#metode {
+    width: 100%;
+  }
+
+  #toggleAudio {
+    width: 100%;
+  }
+
+  .jadwal-item {
+    font-size: 16px;
+    padding: 10px 12px;
+  }
+}
+
+@media (max-width: 400px) {
+
+  body {
+    font-size: 14px;
+  }
+
+  .jadwal-item {
+    font-size: 14px;
+    padding: 8px 10px;
+  }
+
+  #menuju {
+    font-size: 18px;
+  }
+}
