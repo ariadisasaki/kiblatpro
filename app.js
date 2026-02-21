@@ -100,20 +100,46 @@ async function getElevation() {
 }
 
 async function reverseGeocode() {
+  // 🔹 Pastikan koordinat tersedia
+  if (!userLat || !userLng) {
+    console.warn("Koordinat belum tersedia, reverse geocode dibatalkan.");
+    document.getElementById("namaLokasi").innerText = "📍 Koordinat belum tersedia";
+    return;
+  }
+
   try {
-    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${userLat}&lon=${userLng}`);
+    // 🔹 Panggil API Nominatim OpenStreetMap
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${userLat}&lon=${userLng}`
+    );
+    
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    
     const data = await res.json();
-    const desa = data.address.village||data.address.town||data.address.city||data.address.county||"";
-    const negara = data.address.country||"";
-    const lokasiParts=[];
-    if(desa && desa.trim()!=="") lokasiParts.push(desa.trim());
-    if(negara && negara.trim()!=="") lokasiParts.push(negara.trim());
-    const lokasiFinal = lokasiParts.join(", ");
+    
+    // 🔹 Ambil nama desa/kota dan negara
+    const desa = data.address?.village || data.address?.town || data.address?.city || data.address?.county || "";
+    const negara = data.address?.country || "";
+    
+    const lokasiParts = [];
+    if (desa && desa.trim() !== "") lokasiParts.push(desa.trim());
+    if (negara && negara.trim() !== "") lokasiParts.push(negara.trim());
+    
+    const lokasiFinal = lokasiParts.join(", ") || "Lokasi tidak diketahui";
+    
+    // 🔹 Update elemen di halaman
     document.getElementById("namaLokasi").innerText = `📍 ${lokasiFinal}`;
     document.getElementById("compassLokasi").innerText = lokasiFinal;
     document.getElementById("compassKoordinat").innerText =
       `${userLat.toFixed(6)}, ${userLng.toFixed(6)} - ${elevation.toFixed(2)} mdpl`;
-  } catch(e){ document.getElementById("namaLokasi").innerText = "📍 Silakan refresh halaman.."; }
+    
+  } catch (e) {
+    console.warn("Reverse geocode gagal:", e);
+    // 🔹 Fallback tampilkan koordinat saja
+    document.getElementById("namaLokasi").innerText =
+      `📍 ${userLat.toFixed(6)}, ${userLng.toFixed(6)}`;
+    document.getElementById("compassLokasi").innerText = "Koordinat tidak dapat diterjemahkan";
+  }
 }
 
 /* ===============================
