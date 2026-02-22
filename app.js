@@ -445,9 +445,7 @@ window.addEventListener("deviceorientation", e=>{
   document.getElementById("qiblatLine").style.transform =
     `translate(-50%, -100%) rotate(${azimuthKiblat - smoothHeading}deg)`;
   const selisih = ((azimuthKiblat - smoothHeading + 540)%360)-180;
-  document.getElementById("selisihSudut").innerText=
-    `Selisih Sudut : ${Math.abs(selisih).toFixed(1)}°`;
-
+  
   // ===============================
   // GETAR SAAT MENGHADAP KA'BAH
   // ===============================
@@ -461,6 +459,9 @@ window.addEventListener("deviceorientation", e=>{
   } else {
     sudahGetar = false;
   }
+
+  document.getElementById("selisihSudut").innerText=
+    `Selisih Sudut : ${Math.abs(selisih).toFixed(1)}°`;
 
   const index = Math.round(smoothHeading / 45) % 8;
   document.getElementById("arahMataAngin").innerText=
