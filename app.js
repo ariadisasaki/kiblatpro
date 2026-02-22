@@ -366,6 +366,42 @@ function buatLabelPiringan() {
 }
 buatLabelPiringan();
 
+/* ===============================
+   GENERATE TICK KOMPAS 360°
+================================= */
+function createCompassTicks(){
+  const container = document.getElementById("ticks");
+  if(!container) return;
+
+  container.innerHTML = "";
+
+  for(let i=0; i<360; i+=5){
+
+    const tick = document.createElement("div");
+    tick.classList.add("tick");
+
+    if(i % 30 === 0){
+      tick.classList.add("large");
+    }
+    else if(i % 10 === 0){
+      tick.classList.add("medium");
+    }
+    else{
+      tick.classList.add("small");
+    }
+
+    if(i === 0){
+      tick.classList.add("north");
+    }
+
+    tick.style.transform = `rotate(${i}deg)`;
+
+    container.appendChild(tick);
+  }
+}
+
+createCompassTicks();
+
 // Device orientation
 window.addEventListener("deviceorientation", e=>{
   if(e.alpha===null) return;
