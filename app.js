@@ -14,6 +14,7 @@ let elevation = 0;
 let azimuthKiblat = 0;
 let currentHeading = 0;
 let smoothHeading = 0;
+let sudahGetar = false;
 let audioEnabled = true;
 let notified = {};
 
@@ -446,6 +447,20 @@ window.addEventListener("deviceorientation", e=>{
   const selisih = ((azimuthKiblat - smoothHeading + 540)%360)-180;
   document.getElementById("selisihSudut").innerText=
     `Selisih Sudut : ${Math.abs(selisih).toFixed(1)}°`;
+
+  // ===============================
+  // GETAR SAAT MENGHADAP KA'BAH
+  // ===============================
+  if (Math.abs(selisih) <= 3) {
+    if (!sudahGetar) {
+      if (navigator.vibrate) {
+        navigator.vibrate(200); // getar 200ms
+      }
+      sudahGetar = true;
+    }
+  } else {
+    sudahGetar = false;
+  }
 
   const index = Math.round(smoothHeading / 45) % 8;
   document.getElementById("arahMataAngin").innerText=
