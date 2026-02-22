@@ -241,3 +241,18 @@ header{
   transform:translate(-50%, -100%);
   z-index:9;
 }
+
+.compass-info {
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+#compassLokasi {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+#compassKoordinat {
+  font-size: 13px;
+  opacity: 0.8;
+}
