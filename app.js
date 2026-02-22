@@ -1,7 +1,6 @@
-/* ===================================================
+/* ====================================================
    ADZAN PRO - FINAL PRODUCTION BY ARIADI FORESTER
-   INCLUDE IMSAK, ELEVATION, REVERSE GEOCODE
-=================================================== */
+==================================================== */
 
 const KAABAH = { lat: 21.4225, lng: 39.8262 };
 
@@ -23,9 +22,9 @@ const adzanNormal = new Audio("audio/adzan_normal.mp3");
 const metodeSelect = document.getElementById("metode");
 const jadwalList = document.getElementById("jadwalList");
 
-/* ===============================
+/* ==========================
    REALTIME JAM & TANGGAL
-================================= */
+========================== */
 function updateClock() {
   const now = new Date();
   document.getElementById("jam").innerText =
@@ -36,9 +35,9 @@ function updateClock() {
 setInterval(updateClock, 1000);
 updateClock();
 
-/* ===============================
-   INIT METODE
-================================= */
+/* ============================
+   INIT METODE HITUNG HISAB
+============================ */
 let praytime;
 const metodeList = {
   MWL:"Muslim World League",
@@ -69,9 +68,9 @@ function initMetode() {
 }
 initMetode();
 
-/* ===============================
-   GPS & ELEVATION
-================================= */
+/* ================
+   GPS & ELEVASI
+================ */
 navigator.geolocation.getCurrentPosition(
   async pos => {
     userLat = pos.coords.latitude;
@@ -130,15 +129,15 @@ async function getGeoData() {
     userLng.toFixed(6) +
     " - " + elevation.toFixed(2) + " mdpl";
 
-    // ===============================
+    // ===============
     // HALAMAN UTAMA
-    // ===============================
+    // ===============
     document.getElementById("namaLokasi").innerText = namaText;
     document.getElementById("koordinat").innerText = koordinatText;
 
-    // ===============================
-    // POPUP KOMPAS (SAMA PERSIS)
-    // ===============================
+    // ==============
+    // POP UP KOMPAS
+    // ==============
     document.getElementById("compassLokasi").innerText = namaText;
     document.getElementById("compassKoordinat").innerText = koordinatText;
 
@@ -168,7 +167,7 @@ const namaSholatID = {
 function labelSholat(key){ return namaSholatID[key]||key; }
 
 /* ===============================
-   TAMPILKAN JADWAL
+   TAMPILKAN JADWAL SHOLAT
 ================================= */
 function tampilkanJadwal(times){
   jadwalList.innerHTML="";
@@ -188,7 +187,7 @@ function tampilkanJadwal(times){
 }
 
 /* ===============================
-   LOAD JADWAL FINAL
+   LOAD FINAL JADWAL SHOLAT
 ================================= */
 async function loadJadwal(){
   if(!userLat || !userLng) return;
@@ -257,9 +256,9 @@ function subtractMinutes(timeStr, mins){
   return `${hh}:${mm}`;
 }
 
-/* ===============================
-   COUNTDOWN & ALERT
-================================= */
+/* ============================
+   HITUNG MUNDUR & PERINGATAN
+============================ */
 function startCountdown(){
   if(countdownInterval) clearInterval(countdownInterval);
   countdownInterval=setInterval(()=>{
@@ -320,9 +319,9 @@ function checkNearPrayer(){
 setInterval(checkNearPrayer,30000);
 checkNearPrayer();
 
-/* ===============================
-   NOTIFIKASI
-================================= */
+/* =======================================
+   NOTIFIKASI SHOLAT, IMSAK, DAN TERBIT
+======================================= */
 function checkNotification(name,diff){
   if(diff===0&&!notified[name]){
     notified[name]=true;
@@ -344,16 +343,16 @@ function checkNotification(name,diff){
 }
 Notification.requestPermission();
 
-/* ===============================
-   TOGGLE AUDIO
-================================= */
+/* ======================
+   TOMBOL ON OFF AUDIO
+====================== */
 document.getElementById("toggleAudio").onclick=()=>{
   audioEnabled=!audioEnabled;
   document.getElementById("toggleAudio").innerText=audioEnabled?"🔔 Audio ON":"🔕 Audio OFF";
 };
 
 /* ===============================
-   HITUNG KIBLAT
+   HITUNG JARAK DAN SUDUT KIBLAT
 ================================= */
 function hitungKiblat(){
   const dLon=(KAABAH.lng-userLng)*Math.PI/180;
@@ -397,9 +396,9 @@ function buatLabelPiringan() {
 }
 buatLabelPiringan();
 
-/* ===============================
-   GENERATE TICK KOMPAS 360°
-================================= */
+/* =====================
+   JARUM KOMPAS 360°
+===================== */
 function createCompassTicks(){
   const container = document.getElementById("ticks");
   if(!container) return;
@@ -433,8 +432,10 @@ function createCompassTicks(){
 
 createCompassTicks();
 
-// Device orientation
-window.addEventListener("deviceorientation", e=>{
+/* =====================
+   ORIENTASI PERANGKAT
+===================== */
+  window.addEventListener("deviceorientation", e=>{
   if(e.alpha===null) return;
   currentHeading = 360 - e.alpha;
   smoothHeading += (currentHeading - smoothHeading)*0.1;
@@ -452,7 +453,9 @@ window.addEventListener("deviceorientation", e=>{
     `${arahMataAnginLabel[index]}`;
 });
 
-// Overlay kompas
+/* ==================
+   OVERLAY KOMPAS
+================== */
 document.getElementById("btnKiblat").onclick=()=>{
   document.getElementById("overlay").style.display="flex";
 };
