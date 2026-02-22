@@ -273,9 +273,11 @@ function startCountdown(){
       if(waktu>now){ nextName=key; nextDate=waktu; break; }
     }
     if(!nextDate){
-      const [h,m]=currentTimes["imsak"].split(":").map(Number);
-      nextDate=new Date(); nextDate.setDate(nextDate.getDate()+1);
-      nextDate.setHours(h,m,0,0); nextName="imsak";
+      const [h,m]=currentTimes["fajr"].split(":").map(Number);
+      nextDate=new Date();
+      nextDate.setDate(nextDate.getDate()+1);
+      nextDate.setHours(h,m,0,0);
+      nextName="fajr";
     }
 
     const diffMs=nextDate-now;
