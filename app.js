@@ -328,7 +328,7 @@ function checkNotification(name,diff){
     if(name==="fajr") {
     adzanSubuh.play();
     }
-    else if(["imsak","sunrise"].includes(name)) {
+    else if(name==="sunrise") {
     // tidak ada suara atau suara ringan
     }
     else {
