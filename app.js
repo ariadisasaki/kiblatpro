@@ -449,7 +449,7 @@ window.addEventListener("deviceorientation", e=>{
 
   const index = Math.round(smoothHeading / 45) % 8;
   document.getElementById("arahMataAngin").innerText=
-    `{arahMataAnginLabel[index]}`;
+    `${arahMataAnginLabel[index]}`;
 });
 
 // Overlay kompas
