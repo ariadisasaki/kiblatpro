@@ -215,14 +215,14 @@ async function loadJadwal(){
     const apiTimes = json.data.timings;
 
     currentTimes={
-      imsak: subtractMinutes(apiTimes.Fajr.substring(0,5),10),
-      fajr: apiTimes.Fajr.substring(0,5),
-      sunrise: apiTimes.Sunrise.substring(0,5),
-      dhuhr: apiTimes.Dhuhr.substring(0,5),
-      asr: apiTimes.Asr.substring(0,5),
-      maghrib: apiTimes.Maghrib.substring(0,5),
-      isha: apiTimes.Isha.substring(0,5)
-    };
+    currentTimes={
+    fajr: apiTimes.Fajr.substring(0,5),
+    sunrise: apiTimes.Sunrise.substring(0,5),
+    dhuhr: apiTimes.Dhuhr.substring(0,5),
+    asr: apiTimes.Asr.substring(0,5),
+    maghrib: apiTimes.Maghrib.substring(0,5),
+    isha: apiTimes.Isha.substring(0,5)
+  };
 
   } catch(err){
     console.warn("API gagal, fallback ke PrayTime",err);
