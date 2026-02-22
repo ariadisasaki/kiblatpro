@@ -155,7 +155,6 @@ async function getGeoData() {
    NAMA SHOLAT + IMSAK
 ================================= */
 const namaSholatID = {
-  imsak:"Imsak",
   fajr:"Subuh",
   sunrise:"Terbit",
   dhuhr:"Dzuhur",
