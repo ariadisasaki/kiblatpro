@@ -122,17 +122,25 @@ async function getGeoData() {
         ? capitalizeWords(lokasiParts.join(", "))
         : "Lokasi Tidak Ditemukan";
 
-    // 🔥 TAMPILAN FINAL
-    document.getElementById("namaLokasi").innerText =
-      "📍 " + lokasiFinal;
+    // 🔥 FORMAT FINAL
+    const namaText = "📍 " + lokasiFinal;
 
     const koordinatText =
-      userLat.toFixed(6) + ", " +
-      userLng.toFixed(6) +
-      " - " + elevation.toFixed(2) + " mdpl";
+    userLat.toFixed(6) + ", " +
+    userLng.toFixed(6) +
+    " - " + elevation.toFixed(2) + " mdpl";
 
-    document.getElementById("koordinat").innerText =
-      koordinatText;
+    // ===============================
+    // HALAMAN UTAMA
+    // ===============================
+    document.getElementById("namaLokasi").innerText = namaText;
+    document.getElementById("koordinat").innerText = koordinatText;
+
+    // ===============================
+    // POPUP KOMPAS (SAMA PERSIS)
+    // ===============================
+    document.getElementById("compassLokasi").innerText = namaText;
+    document.getElementById("compassKoordinat").innerText = koordinatText;
 
     // Matikan animasi GPS
     const icon = document.getElementById("gpsIcon");
