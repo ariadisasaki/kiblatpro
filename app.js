@@ -215,13 +215,13 @@ async function loadJadwal(){
     const apiTimes = json.data.timings;
 
     currentTimes={
-    fajr: apiTimes.Fajr.substring(0,5),
-    sunrise: apiTimes.Sunrise.substring(0,5),
-    dhuhr: apiTimes.Dhuhr.substring(0,5),
-    asr: apiTimes.Asr.substring(0,5),
-    maghrib: apiTimes.Maghrib.substring(0,5),
-    isha: apiTimes.Isha.substring(0,5)
-  };
+      fajr: apiTimes.Fajr.substring(0,5),
+      sunrise: apiTimes.Sunrise.substring(0,5),
+      dhuhr: apiTimes.Dhuhr.substring(0,5),
+      asr: apiTimes.Asr.substring(0,5),
+      maghrib: apiTimes.Maghrib.substring(0,5),
+      isha: apiTimes.Isha.substring(0,5)
+    };
 
   } catch(err){
     console.warn("API gagal, fallback ke PrayTime",err);
@@ -264,7 +264,7 @@ function startCountdown(){
     const todayKey=now.toDateString();
     if(todayKey!==currentDateKey){ loadJadwal(); return; }
 
-    const urutan=["imsak","fajr","sunrise","dhuhr","asr","maghrib","isha"];
+    const urutan=["fajr","sunrise","dhuhr","asr","maghrib","isha"];
     let nextName=null, nextDate=null;
     for(let key of urutan){
       const [h,m]=currentTimes[key].split(":").map(Number);
