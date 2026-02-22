@@ -215,7 +215,6 @@ async function loadJadwal(){
     const apiTimes = json.data.timings;
 
     currentTimes={
-    currentTimes={
     fajr: apiTimes.Fajr.substring(0,5),
     sunrise: apiTimes.Sunrise.substring(0,5),
     dhuhr: apiTimes.Dhuhr.substring(0,5),
@@ -231,7 +230,6 @@ async function loadJadwal(){
       .timezone(Intl.DateTimeFormat().resolvedOptions().timeZone)
       .getTimes(now);
     currentTimes={
-      imsak: subtractMinutes(offlineTimes.fajr,10),
       fajr: offlineTimes.fajr,
       sunrise: offlineTimes.sunrise,
       dhuhr: offlineTimes.dhuhr,
