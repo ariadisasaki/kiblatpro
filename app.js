@@ -76,49 +76,72 @@ navigator.geolocation.getCurrentPosition(
   async pos => {
     userLat = pos.coords.latitude;
     userLng = pos.coords.longitude;
-    document.getElementById("koordinat").innerText =
-      `${userLat.toFixed(6)}, ${userLng.toFixed(6)} - memuat elevasi...`;
-    await getElevation();
-    await reverseGeocode();
+
+    await getGeoData();
     hitungKiblat();
     loadJadwal();
   },
-  err => { document.getElementById("namaLokasi").innerText = "❌ Izin lokasi ditolak / GPS tidak aktif"; },
+  err => {
+    document.getElementById("namaLokasi").innerText =
+      "❌ Izin lokasi ditolak / GPS tidak aktif";
+  },
   { enableHighAccuracy:true, timeout:15000, maximumAge:0 }
 );
 
-// Gunakan Cloudflare Worker Google Elevation API
-async function getElevation() {
-  if (!userLat || !userLng) return;
-  try {
-    const res = await fetch(`/elevation?lat=${userLat}&lng=${userLng}`);
-    const data = await res.json();
-    if (data.results && data.results[0]) elevation = data.results[0].elevation;
-    document.getElementById("koordinat").innerText =
-      `${userLat.toFixed(6)}, ${userLng.toFixed(6)} - ${elevation.toFixed(2)} mdpl`;
-  } catch(e){
-    document.getElementById("koordinat").innerText =
-      `${userLat.toFixed(6)}, ${userLng.toFixed(6)}`;
-  }
+function capitalizeWords(str) {
+  return str.replace(/\b\w/g, l => l.toUpperCase());
 }
 
-// Reverse Geocode pakai Google Maps API (Cloudflare Worker atau API Key)
-async function reverseGeocode() {
-  if (!userLat || !userLng) return;
+function bersihkanKabupaten(text) {
+  if (!text) return "";
+  return text
+    .replace(/^Kabupaten\s+/i, "")
+    .replace(/^Kota\s+/i, "");
+}
+
+async function getGeoData() {
   try {
-    const res = await fetch(`/georeverse?lat=${userLat}&lng=${userLng}`);
+    const res = await fetch(
+      "https://geocode.ariadishut.workers.dev?lat=" + userLat + "&lng=" + userLng
+    );
+
     const data = await res.json();
-    const desa = data.address?.village || data.address?.town || data.address?.city || data.address?.county || "";
-    const negara = data.address?.country || "";
-    const lokasiParts = [];
-    if (desa) lokasiParts.push(desa.trim());
-    if (negara) lokasiParts.push(negara.trim());
-    const lokasiFinal = lokasiParts.join(", ");
-    document.getElementById("namaLokasi").innerText = `📍 ${lokasiFinal}`;
-    document.getElementById("compassLokasi").innerText = lokasiFinal;
-    document.getElementById("compassKoordinat").innerText =
-      `${userLat.toFixed(6)}, ${userLng.toFixed(6)} - ${elevation.toFixed(2)} mdpl`;
-  } catch(e){ document.getElementById("namaLokasi").innerText = "📍 Nama lokasi tidak ditemukan.."; }
+
+    elevation = data.elevation || 0;
+
+    const desa = data.village || "";
+    const kecamatan = data.subdistrict || "";
+    const kabupaten = bersihkanKabupaten(data.district || "");
+    const provinsi = data.province || "";
+
+    const lokasiParts = [desa, kecamatan, kabupaten, provinsi]
+      .filter(Boolean);
+
+    const lokasiFinal =
+      lokasiParts.length
+        ? capitalizeWords(lokasiParts.join(", "))
+        : "Lokasi Tidak Ditemukan";
+
+    // 🔥 TAMPILAN FINAL
+    document.getElementById("namaLokasi").innerText =
+      "📍 " + lokasiFinal;
+
+    const koordinatText =
+      userLat.toFixed(6) + ", " +
+      userLng.toFixed(6) +
+      " - " + elevation.toFixed(2) + " mdpl";
+
+    document.getElementById("koordinat").innerText =
+      koordinatText;
+
+    // Matikan animasi GPS
+    const icon = document.getElementById("gpsIcon");
+    if (icon) icon.style.animation = "none";
+
+  } catch (e) {
+    document.getElementById("namaLokasi").innerText =
+      "📍 Gagal memuat lokasi";
+  }
 }
 
 /* ===============================
