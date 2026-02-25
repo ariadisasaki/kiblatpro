@@ -4,87 +4,54 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Adzan Pro</title>
-<link rel="manifest" href="manifest.json">
 <link rel="stylesheet" href="style.css">
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
-<meta name="theme-color" content="#e6ddd2">
 </head>
 <body>
 
-<header>
-  <div class="top-bar">
-    <div id="tanggal"></div>
+<!-- ================= HEADER ================= -->
+<div class="header">
+  <div id="tanggal"></div>
+  <div id="namaLokasi">📍 Mengambil lokasi...</div>
 
-    <!-- 🔥 GANTI JAM DENGAN TOMBOL BAHASA -->
-    <div class="lang-switch">
-      <button class="lang-btn" data-lang="id">ID</button>
-      <button class="lang-btn" data-lang="en">EN</button>
-      <button class="lang-btn" data-lang="ar">AR</button>
-    </div>
-  </div>
-
-  <div class="countdown-area">
-    <div>
-      <h2 id="menuju">Memuat...</h2>
-      <p id="countdown"></p>
-      <p id="prayerAlert" class="blink-text"></p>
-    </div>
-    <button id="btnKiblat">🧭 QIBLAT</button>
-  </div>
-
-  <div class="lokasi">
-    <div id="namaLokasi">📍 Mengambil lokasi...</div>
-    <div id="koordinat"></div>
-  </div>
-</header>
-
-<section class="control-bar">
   <select id="metode"></select>
-  <button id="toggleAudio">🔔 Audio ON</button>
-</section>
 
-<section id="jadwalList"></section>
-
-<!-- OVERLAY KOMPAS -->
-<div id="overlay" class="overlay">
-  <div class="compass-card">
-    <div class="compass-info">
-      <div id="compassLokasi"></div>
-      <div id="compassKoordinat"></div>
-    </div>
-
-    <div id="arahMataAngin" class="compass-heading"></div>
-
-    <div class="compass">
-      <div id="compassDisk" class="compass-disk">
-        <div class="ring"></div>
-        <div id="ticks" class="ticks"></div>
-        <div id="directionLabels" class="direction-labels"></div>
-      </div>
-
-      <div id="qiblatLine" class="qiblat-line"></div>
-      <div id="needle" class="needle"></div>
-    </div>
-
-    <div class="compass-detail">
-      <p id="jarakKabah"></p>
-      <p id="azimuthKabah"></p>
-      <p id="selisihSudut"></p>
-    </div>
-
-    <button id="closeCompass">❌ Tutup</button>
-  </div>
+  <div id="menuju"></div>
+  <div id="countdown"></div>
 </div>
 
-<footer class="footer">
-© <span id="year"></span>
-<a href="https://www.facebook.com/share/1C8bjd7Xoh" target="_blank" class="developer-link"> ArDev</a>
-</footer>
+<!-- ================= JADWAL ================= -->
+<div id="jadwalList"></div>
 
-<script>
-document.getElementById("year").textContent = new Date().getFullYear();
-</script>
-<script src="libs/praytime.js"></script>
+<!-- ================= BUTTON KIBLAT ================= -->
+<button id="btnKiblat">🧭 Kompas Kiblat</button>
+
+<!-- ================= OVERLAY KOMPAS ================= -->
+<div id="overlay" class="overlay">
+
+  <div class="compass-container">
+
+    <button id="closeCompass" class="close-btn">✕</button>
+
+    <!-- Arah Mata Angin -->
+    <div id="arahMataAngin" class="arah-text"></div>
+
+    <!-- Disk Kompas -->
+    <div id="compassDisk" class="compass-disk">
+      <div class="north">N</div>
+      <div class="east">E</div>
+      <div class="south">S</div>
+      <div class="west">W</div>
+    </div>
+
+    <!-- Garis Kiblat -->
+    <div id="qiblatLine" class="qiblat-line"></div>
+
+  </div>
+
+</div>
+
+<script src="praytime.js"></script>
 <script src="app.js"></script>
+
 </body>
 </html>
