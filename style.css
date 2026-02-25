@@ -256,3 +256,22 @@ header{
   font-size: 13px;
   opacity: 0.8;
 }
+
+.lang-switch{
+  display:flex;
+  gap:5px;
+}
+
+.lang-btn{
+  border:none;
+  padding:5px 10px;
+  border-radius:8px;
+  background:#000;
+  color:#fff;
+  font-size:12px;
+  cursor:pointer;
+}
+
+.lang-btn:hover{
+  opacity:0.8;
+}
